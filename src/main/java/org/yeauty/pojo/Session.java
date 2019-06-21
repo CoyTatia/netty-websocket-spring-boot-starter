@@ -7,6 +7,7 @@ import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.util.AttributeKey;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -34,6 +35,7 @@ public class Session {
 
     public ChannelFuture sendText(ByteBuffer byteBuffer) {
         ByteBuf buffer = channel.alloc().buffer(byteBuffer.remaining());
+        buffer.writeBytes(byteBuffer);
         return channel.writeAndFlush(new TextWebSocketFrame(buffer));
     }
 
@@ -52,11 +54,22 @@ public class Session {
 
     public ChannelFuture sendBinary(ByteBuffer byteBuffer) {
         ByteBuf buffer = channel.alloc().buffer(byteBuffer.remaining());
+        buffer.writeBytes(byteBuffer);
         return channel.writeAndFlush(new BinaryWebSocketFrame(buffer));
     }
 
     public ChannelFuture sendBinary(BinaryWebSocketFrame binaryWebSocketFrame) {
         return channel.writeAndFlush(binaryWebSocketFrame);
+    }
+
+    public <T> void setAttribute(String name, T value) {
+        AttributeKey<T> sessionIdKey = AttributeKey.valueOf(name);
+        channel.attr(sessionIdKey).set(value);
+    }
+
+    public <T> T getAttribute(String name) {
+        AttributeKey<T> sessionIdKey = AttributeKey.valueOf(name);
+        return channel.attr(sessionIdKey).get();
     }
 
     public Channel channel() {
